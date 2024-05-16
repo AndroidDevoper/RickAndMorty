@@ -16,4 +16,12 @@
         android:name="com.example.rickandmorty.ui.favorites.FavoritesFragment"
         android:label="@string/title_favorites"
         tools:layout="@layout/fragment_dashboard" />
+
+    <fragment
+        android:id="@+id/fullCharacterFragment"
+        android:name="com.example.rickandmorty.ui.characters.FullCharacterFragment"
+        android:label="Full Character Fragment"
+        tools:layout="@layout/fragment_full_character">
+    </fragment>
+
 </navigation>
