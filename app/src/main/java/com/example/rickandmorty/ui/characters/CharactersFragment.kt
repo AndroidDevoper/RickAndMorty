@@ -6,8 +6,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import com.example.rickandmorty.data.remote.RetrofitClient.characterApi
 import com.example.rickandmorty.databinding.FragmentHomeBinding
-
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 class CharactersFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
@@ -21,6 +24,12 @@ class CharactersFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val list = characterApi.getAllCharacters()
+
+        }
+
         return binding.root
     }
 
