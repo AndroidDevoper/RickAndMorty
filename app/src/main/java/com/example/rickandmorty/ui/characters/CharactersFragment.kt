@@ -17,15 +17,10 @@ class CharactersFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
+        inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
-            .apply {
-            viewModel = this@CharactersFragment.viewModel
-            lifecycleOwner = viewLifecycleOwner
-        }
 
         return binding.root
     }
@@ -37,8 +32,8 @@ class CharactersFragment : Fragment() {
         binding.listCharacter.layoutManager = LinearLayoutManager(requireContext())
         binding.listCharacter.adapter = adapter
 
-        viewModel.character.observe(viewLifecycleOwner, Observer { character ->
-            adapter.submitList(character)
+        viewModel.characters.observe(viewLifecycleOwner, Observer { characters ->
+            adapter.submitList(characters)
         })
     }
 

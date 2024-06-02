@@ -2,7 +2,6 @@ package com.example.rickandmorty.data.remote
 
 import com.example.rickandmorty.data.remote.dto.CharacterDto
 import com.example.rickandmorty.data.remote.dto.GetPageCharactersResult
-import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query

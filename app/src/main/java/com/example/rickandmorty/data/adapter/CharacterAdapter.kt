@@ -10,13 +10,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.rickandmorty.R
-import com.example.rickandmorty.data.remote.dto.CharacterDto
+import com.example.rickandmorty.data.remote.vo.CharacterVo
 import com.example.rickandmorty.databinding.ListItemBinding
 
-class CharacterAdapter: ListAdapter<CharacterDto, CharacterAdapter.Holder>(Comparator()) {
+class CharacterAdapter: ListAdapter<CharacterVo, CharacterAdapter.Holder>(Comparator()) {
     class Holder(view: View) : RecyclerView.ViewHolder(view) {
         private val binding = ListItemBinding.bind(view)
-        fun bind(character: CharacterDto) = with(binding) {
+        fun bind(character: CharacterVo) = with(binding) {
             name.text = character.name
             status.text = character.status
             species.text = character.species
@@ -28,11 +28,11 @@ class CharacterAdapter: ListAdapter<CharacterDto, CharacterAdapter.Holder>(Compa
                 .into(imageView)
         }
     }
-    class Comparator : DiffUtil.ItemCallback<CharacterDto>() {
-        override fun areItemsTheSame(oldItem: CharacterDto, newItem: CharacterDto): Boolean {
+    class Comparator : DiffUtil.ItemCallback<CharacterVo>() {
+        override fun areItemsTheSame(oldItem: CharacterVo, newItem: CharacterVo): Boolean {
             return oldItem.id == newItem.id
         }
-        override fun areContentsTheSame(oldItem: CharacterDto, newItem: CharacterDto): Boolean {
+        override fun areContentsTheSame(oldItem: CharacterVo, newItem: CharacterVo): Boolean {
             return oldItem == newItem
         }
     }

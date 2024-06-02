@@ -1,21 +1,14 @@
 package com.example.rickandmorty.ui.characters
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.liveData
 import com.example.rickandmorty.data.remote.CharacterRepository
-import com.example.rickandmorty.data.remote.dto.GetPageCharactersResult
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 
 class CharactersViewModel : ViewModel() {
     private val characterRepository = CharacterRepository()
-    private val _character = MutableLiveData<List<GetPageCharactersResult>>()
-    val character: LiveData<List<GetPageCharactersResult>> get() = _character
-
-    fun loadPosts() {
-        viewModelScope.launch {
-            _character.value = listOf(characterRepository.getAllCharacters())
-        }
+    val characters = liveData(Dispatchers.IO) {
+        val retrievedCharacters = characterRepository.getCharacters()
+        emit(retrievedCharacters)
     }
 }

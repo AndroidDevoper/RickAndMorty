@@ -10,14 +10,12 @@ import com.example.rickandmorty.databinding.FragmentFullCharacterBinding
 class FullCharacterFragment : Fragment() {
     private var _binding: FragmentFullCharacterBinding? = null
     private val binding get() = _binding!!
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentFullCharacterBinding.inflate(inflater, container, false)
-
 
         val nameCharacter = "Подробное описание"
         binding.fullCharacter.text = nameCharacter
@@ -28,5 +26,4 @@ class FullCharacterFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
-
 }
