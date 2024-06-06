@@ -1,21 +1,26 @@
 package com.example.rickandmorty.ui.characters
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.liveData
 import com.example.rickandmorty.data.remote.CharacterRepository
-import com.example.rickandmorty.data.remote.dto.GetPageCharactersResult
-import kotlinx.coroutines.launch
+import com.example.rickandmorty.data.remote.NetworkUtil
+import kotlinx.coroutines.Dispatchers
+import java.io.IOException
 
-class CharactersViewModel : ViewModel() {
+class CharactersViewModel(application: Application) : AndroidViewModel(application) {
     private val characterRepository = CharacterRepository()
-    private val _character = MutableLiveData<List<GetPageCharactersResult>>()
-    val character: LiveData<List<GetPageCharactersResult>> get() = _character
-
-    fun loadPosts() {
-        viewModelScope.launch {
-            _character.value = listOf(characterRepository.getAllCharacters())
+    val characters = liveData(Dispatchers.IO) {
+        try {
+            if (!NetworkUtil.isInternetAvailable(getApplication())) {
+                throw IOException("Нет подключения к интернету")
+            }
+            val retrievedCharacters = characterRepository.getCharacters()
+            emit(retrievedCharacters)
+        } catch (e: IOException) {
+            emit(emptyList())
+        } catch (e: Exception) {
+            emit(emptyList())
         }
     }
 }

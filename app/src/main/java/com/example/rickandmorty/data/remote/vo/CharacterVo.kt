@@ -1,8 +1,5 @@
 package com.example.rickandmorty.data.remote.vo
 
-import com.example.rickandmorty.data.remote.dto.LocationDto
-import com.example.rickandmorty.data.remote.dto.OriginDto
-
 data class CharacterVo(
     val id: Int,
     val name: String,
