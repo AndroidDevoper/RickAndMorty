@@ -1,5 +1,6 @@
 package com.example.rickandmorty.data.adapter
 
+import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.navigation.findNavController
@@ -11,10 +12,10 @@ import com.bumptech.glide.request.RequestOptions
 import com.example.rickandmorty.R
 import com.example.rickandmorty.data.remote.vo.CharacterVo
 import com.example.rickandmorty.databinding.ListItemBinding
-import android.os.Bundle
 
 class CharacterAdapter
-    : ListAdapter<CharacterVo, CharacterAdapter.CharacterViewHolder>(DiffCallback()) {
+    : ListAdapter<CharacterVo, CharacterAdapter.CharacterViewHolder> (CharacterDiffCallback()) {
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CharacterViewHolder {
         val binding = ListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return CharacterViewHolder(binding)
@@ -45,7 +46,7 @@ class CharacterAdapter
         }
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<CharacterVo>() {
+    class CharacterDiffCallback : DiffUtil.ItemCallback<CharacterVo>() {
         override fun areItemsTheSame(oldItem: CharacterVo, newItem: CharacterVo): Boolean {
             return oldItem.id == newItem.id
         }

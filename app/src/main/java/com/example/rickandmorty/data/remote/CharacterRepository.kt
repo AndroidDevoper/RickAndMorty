@@ -10,14 +10,14 @@ import com.example.rickandmorty.data.remote.vo.OriginVo
 class CharacterRepository {
     private val apiService = RetrofitClient.characterApi
 
-    suspend fun getAllCharacters(): GetPageCharactersResult {
-        return apiService.getAllCharacters()
+    private suspend fun getAllCharacters(page: Int): GetPageCharactersResult {
+        return apiService.getAllCharacters(page)
     }
 
-    suspend fun getCharacters(): List<CharacterVo>? {
-        val result = getAllCharacters() // Получаем результат из API
-        val dtoList = result.results  // Извлекаем список CharacterDto
-        return dtoList.map { dto ->  // Преобразуем список CharacterDto в список CharacterVo
+    suspend fun getCharacters(currentPage: Int): List<CharacterVo> {
+        val result = getAllCharacters(currentPage)
+        val dtoList = result.results
+        return dtoList.map { dto ->
             CharacterVo(
                 id = dto.id ?: 0,
                 name = dto.name ?: "",
@@ -47,5 +47,25 @@ class CharacterRepository {
             name = dto?.name ?: "",
             url = dto?.url ?: ""
         )
+    }
+
+    suspend fun getCharacterById(id: Int): CharacterVo {
+        val dto = apiService.getCharacterById(id)
+        return dto.let {
+            CharacterVo(
+                id = it.id ?: 0,
+                name = it.name ?: "",
+                status = it.status ?: "",
+                species = it.species ?: "",
+                type = it.type ?: "",
+                gender = it.gender ?: "",
+                origin = mapOrigin(it.origin),
+                location = mapLocation(it.location),
+                image = it.image ?: "",
+                episode = it.episode ?: emptyList(),
+                url = it.url ?: "",
+                created = it.created ?: ""
+            )
+        }
     }
 }

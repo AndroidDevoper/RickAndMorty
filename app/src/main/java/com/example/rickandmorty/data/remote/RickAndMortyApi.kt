@@ -10,7 +10,7 @@ interface RickAndMortyApi {
 
     @GET("character")
     suspend fun getAllCharacters(
-        @Query("pages") page: Int? = null,
+        @Query("page") page: Int? = null,
         @Query("id") id: Int? = null,
         @Query("name") name: String? = null,
         @Query("status") status: String? = null,
@@ -20,8 +20,8 @@ interface RickAndMortyApi {
         @Query("image") image: String? = null,
     ): GetPageCharactersResult
 
-    @GET("/character/{id}")
-    fun getCharacterId(
+    @GET("character/{id}")
+    suspend fun getCharacterById(
         @Path("id") id: Int
     ): CharacterDto
 }
