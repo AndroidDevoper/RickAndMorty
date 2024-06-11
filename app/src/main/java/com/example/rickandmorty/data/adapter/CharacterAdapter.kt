@@ -13,7 +13,7 @@ import com.example.rickandmorty.data.remote.vo.CharacterVo
 import com.example.rickandmorty.databinding.ListItemBinding
 import android.os.Bundle
 
-class CharacterAdapter
+class CharacterAdapter(private val clickListener: (Int) -> Unit)
     : ListAdapter<CharacterVo, CharacterAdapter.CharacterViewHolder>(DiffCallback()) {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CharacterViewHolder {
         val binding = ListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -37,10 +37,7 @@ class CharacterAdapter
                 .apply(RequestOptions().override(400, 400))
                 .into(binding.imageView)
             binding.root.setOnClickListener {
-                val bundle = Bundle().apply {
-                    putInt("characterId", character.id)
-                }
-                it.findNavController().navigate(R.id.fullCharacterFragment, bundle)
+                clickListener(character.id)
             }
         }
     }
