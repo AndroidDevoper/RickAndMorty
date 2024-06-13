@@ -17,4 +17,12 @@
         android:label="@string/title_favorites"
         tools:layout="@layout/fragment_dashboard" />
 
+    <fragment
+        android:id="@+id/fullCharacterFragment"
+        android:name="com.example.rickandmorty.ui.characters.CharacterDetailsFragment"
+        android:label="@string/full_description"
+        tools:layout="@layout/fragment_character_details" />
+    <argument
+        android:name="characterId"
+        app:argType="integer" />
 </navigation>
