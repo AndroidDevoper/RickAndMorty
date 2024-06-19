@@ -3,6 +3,10 @@ package com.example.rickandmorty.data.remote
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.view.Gravity
+import android.view.View
+import androidx.coordinatorlayout.widget.CoordinatorLayout
+import com.google.android.material.snackbar.Snackbar
 
 object NetworkUtil {
     fun isInternetAvailable(context: Context): Boolean {
@@ -15,5 +19,14 @@ object NetworkUtil {
             activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
             else -> false
         }
+    }
+
+    fun showCenteredSnackbar(view: View) {
+        val snackbar = Snackbar.make(view, "Нет интернета или данные не доступны", Snackbar.LENGTH_LONG)
+        val snackbarView = snackbar.view
+        val params = snackbarView.layoutParams as CoordinatorLayout.LayoutParams
+        params.gravity = Gravity.CENTER
+        snackbarView.layoutParams = params
+        snackbar.show()
     }
 }
