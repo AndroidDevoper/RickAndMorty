@@ -1,14 +1,17 @@
 package com.example.rickandmorty.data.remote
 
-import com.example.rickandmorty.data.remote.dto.GetPageCharactersResult
-import com.example.rickandmorty.data.remote.dto.LocationDto
-import com.example.rickandmorty.data.remote.dto.OriginDto
-import com.example.rickandmorty.data.remote.vo.CharacterVo
-import com.example.rickandmorty.data.remote.vo.LocationVo
-import com.example.rickandmorty.data.remote.vo.OriginVo
+import android.content.Context
+import com.example.rickandmorty.data.remote.dto.*
+import com.example.rickandmorty.data.remote.favorite.AppDatabase
+import com.example.rickandmorty.data.remote.favorite.FavoriteCharacter
+import com.example.rickandmorty.data.remote.vo.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
-class CharacterRepository {
+class CharacterRepository(context: Context) {
+
     private val apiService = RetrofitClient.characterApi
+    private val favoriteDao = AppDatabase.getDatabase(context).favoriteDao()
 
     private suspend fun getAllCharacters(page: Int): GetPageCharactersResult {
         return apiService.getAllCharacters(page)
@@ -16,56 +19,102 @@ class CharacterRepository {
 
     suspend fun getCharacters(currentPage: Int): List<CharacterVo> {
         val result = getAllCharacters(currentPage)
-        val dtoList = result.results
-        return dtoList.map { dto ->
-            CharacterVo(
-                id = dto.id ?: 0,
-                name = dto.name ?: "",
-                status = dto.status ?: "",
-                species = dto.species ?: "",
-                type = dto.type ?: "",
-                gender = dto.gender ?: "",
-                origin = mapOrigin(dto.origin),
-                location = mapLocation(dto.location),
-                image = dto.image ?: "",
-                episode = dto.episode ?: emptyList(),
-                url = dto.url ?: "",
-                created = dto.created ?: ""
-            )
-        }
+        return result.results.map { it.toVo() }
     }
 
-    private fun mapLocation(dto: LocationDto?): LocationVo {
+    private fun LocationDto?.toVo(): LocationVo {
         return LocationVo(
-            name = dto?.name ?: "",
-            url = dto?.url ?: ""
+            name = this?.name ?: "",
+            url = this?.url ?: ""
         )
     }
 
-    private fun mapOrigin(dto: OriginDto?): OriginVo {
+    private fun OriginDto?.toVo(): OriginVo {
         return OriginVo(
-            name = dto?.name ?: "",
-            url = dto?.url ?: ""
+            name = this?.name ?: "",
+            url = this?.url ?: ""
+        )
+    }
+
+    private fun CharacterDto.toVo(): CharacterVo {
+        return CharacterVo(
+            id = id ?: 0,
+            name = name ?: "",
+            status = status ?: "",
+            species = species ?: "",
+            type = type ?: "",
+            gender = gender ?: "",
+            origin = origin.toVo(),
+            location = location.toVo(),
+            image = image ?: "",
+            episode = episode ?: emptyList(),
+            url = url ?: "",
+            created = created ?: ""
         )
     }
 
     suspend fun getCharacterById(id: Int): CharacterVo {
-        val dto = apiService.getCharacterById(id)
-        return dto.let {
-            CharacterVo(
-                id = it.id ?: 0,
-                name = it.name ?: "",
-                status = it.status ?: "",
-                species = it.species ?: "",
-                type = it.type ?: "",
-                gender = it.gender ?: "",
-                origin = mapOrigin(it.origin),
-                location = mapLocation(it.location),
-                image = it.image ?: "",
-                episode = it.episode ?: emptyList(),
-                url = it.url ?: "",
-                created = it.created ?: ""
-            )
+        return apiService.getCharacterById(id).toVo()
+    }
+
+    suspend fun addFavoriteCharacter(character: CharacterVo) {
+        withContext(Dispatchers.IO) {
+            val entity = character.toEntity()
+            favoriteDao.insert(entity)
         }
+    }
+
+    suspend fun removeFavoriteCharacter(characterId: Int) {
+        withContext(Dispatchers.IO) {
+            favoriteDao.getAllFavorites().find { it.id == characterId }?.let {
+                favoriteDao.delete(it)
+            }
+        }
+    }
+
+    fun getFavoriteCharacters(): List<CharacterVo> {
+        return favoriteDao.getAllFavorites().map { it.toVo() }
+    }
+
+    suspend fun isFavorite(characterId: Int): Boolean {
+        return withContext(Dispatchers.IO) {
+            favoriteDao.isFavorite(characterId)
+        }
+    }
+
+    private fun FavoriteCharacter.toVo(): CharacterVo {
+        return CharacterVo(
+            id = id,
+            name = name,
+            status = status,
+            species = species,
+            type = type,
+            gender = gender,
+            origin = OriginVo(originName, originUrl),
+            location = LocationVo(locationName, locationUrl),
+            image = image,
+            episode = episode,
+            url = url,
+            created = created
+        )
+    }
+
+    private fun CharacterVo.toEntity(): FavoriteCharacter {
+        return FavoriteCharacter(
+            id = id,
+            name = name,
+            status = status,
+            species = species,
+            type = type,
+            gender = gender,
+            originName = origin.name,
+            originUrl = origin.url,
+            locationName = location.name,
+            locationUrl = location.url,
+            image = image,
+            episode = episode,
+            url = url,
+            created = created
+        )
     }
 }

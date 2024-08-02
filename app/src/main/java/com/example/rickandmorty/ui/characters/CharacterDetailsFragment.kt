@@ -7,15 +7,18 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import com.example.rickandmorty.data.adapter.CharacterDetailAdapter
+import com.example.rickandmorty.data.remote.CharacterRepository
 import com.example.rickandmorty.data.remote.NetworkUtil
 import com.example.rickandmorty.data.remote.NetworkUtil.showCenteredSnackbar
 import com.example.rickandmorty.databinding.FragmentHomeBinding
 
 class CharacterDetailsFragment : Fragment() {
+
     private val viewModel by viewModels<CharactersViewModel>()
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
-    private var adapter = CharacterDetailAdapter()
+    private lateinit var repository: CharacterRepository
+    private lateinit var adapter: CharacterDetailAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -29,6 +32,8 @@ class CharacterDetailsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        repository = CharacterRepository(requireContext())
+        adapter = CharacterDetailAdapter(repository)
         binding.listCharacter.adapter = adapter
         binding.progressBar.visibility = View.VISIBLE
 

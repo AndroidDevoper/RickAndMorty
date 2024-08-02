@@ -12,9 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class CharactersViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val characterRepository = CharacterRepository()
-
+    private val characterRepository: CharacterRepository = CharacterRepository(application)
     private val _characters = MutableLiveData<List<CharacterVo>>()
     val characters: LiveData<List<CharacterVo>> get() = _characters
 
@@ -26,6 +24,7 @@ class CharactersViewModel(application: Application) : AndroidViewModel(applicati
 
     private var currentPage = 1
     private var isLastPage = false
+
 
     init {
         loadCharacters()
