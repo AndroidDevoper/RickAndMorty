@@ -10,6 +10,8 @@ import com.example.rickandmorty.data.remote.CharacterRepository
 import com.example.rickandmorty.data.remote.vo.CharacterVo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.IOException
 
 class CharactersViewModel(application: Application) : AndroidViewModel(application) {
     private val characterRepository: CharacterRepository = CharacterRepository(application)
@@ -24,7 +26,6 @@ class CharactersViewModel(application: Application) : AndroidViewModel(applicati
 
     private var currentPage = 1
     private var isLastPage = false
-
 
     init {
         loadCharacters()
@@ -43,8 +44,10 @@ class CharactersViewModel(application: Application) : AndroidViewModel(applicati
                 }
                 isLastPage = response.isEmpty()
                 currentPage++
-            } catch (e: Exception) {
+            } catch (e: IOException) {
                 _error.postValue("Нет интернета или данные не доступны")
+            } catch (e: Exception) {
+                _error.postValue("Произошла ошибка: ${e.message}")
             } finally {
                 _loading.value = false
             }
@@ -52,7 +55,7 @@ class CharactersViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun loadNextPage() {
-        if (!isLastPage && _loading.value == false) {
+        if (!isLastPage && _loading.value != true) {
             loadCharacters()
         }
     }
@@ -61,12 +64,50 @@ class CharactersViewModel(application: Application) : AndroidViewModel(applicati
         _error.value = null
     }
 
-    fun getCharacterById(characterId: Int) = liveData(Dispatchers.IO) {
+    fun getCharacterById(characterId: Int): LiveData<CharacterVo?> = liveData(Dispatchers.IO) {
         try {
             val character = characterRepository.getCharacterById(characterId)
             emit(character)
+        } catch (e: IOException) {
+            emit(null)
+            _error.postValue("Нет интернета или данные не доступны")
         } catch (e: Exception) {
             emit(null)
+            _error.postValue("Произошла ошибка: ${e.message}")
+        }
+    }
+
+    private val _favoriteCharacters = MutableLiveData<List<CharacterVo>>()
+    val favoriteCharacters: LiveData<List<CharacterVo>> get() = _favoriteCharacters
+
+    init {
+        loadFavorites()
+    }
+
+    fun loadFavorites() {
+        viewModelScope.launch {
+            val favorites = withContext(Dispatchers.IO) {
+                characterRepository.getFavoriteCharacters()
+            }
+            _favoriteCharacters.postValue(favorites)
+        }
+    }
+
+    fun addFavoriteCharacter(character: CharacterVo) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                characterRepository.addFavoriteCharacter(character)
+            }
+            _favoriteCharacters.value = _favoriteCharacters.value.orEmpty() + character
+        }
+    }
+
+    fun removeFavoriteCharacter(characterId: Int) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                characterRepository.removeFavoriteCharacter(characterId)
+            }
+            _favoriteCharacters.value = _favoriteCharacters.value?.filter { it.id != characterId }
         }
     }
 }

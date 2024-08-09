@@ -8,18 +8,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.example.rickandmorty.R
-import com.example.rickandmorty.data.remote.vo.CharacterVo
 import com.example.rickandmorty.databinding.ListItemBinding
-import com.example.rickandmorty.ui.favorites.FavoritesViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class CharacterAdapter(
-    private val viewModel: FavoritesViewModel,
-    private val clickListener: (Int) -> Unit
-) : ListAdapter<CharacterVo, CharacterAdapter.CharacterViewHolder>(CharacterDiffCallback()) {
+    private val clickListener: (Int) -> Unit,
+    private val favoriteClickListener: (CharacterAdapterItem) -> Unit
+) : ListAdapter<CharacterAdapterItem, CharacterAdapter.CharacterViewHolder>(CharacterDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CharacterViewHolder {
         val binding = ListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -33,8 +27,10 @@ class CharacterAdapter(
     inner class CharacterViewHolder(private val binding: ListItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(character: CharacterVo) {
+        fun bind(item: CharacterAdapterItem) {
             with(binding) {
+                val character = item.character
+
                 name.text = character.name
                 status.text = character.status
                 species.text = character.species
@@ -50,55 +46,31 @@ class CharacterAdapter(
                     clickListener(character.id)
                 }
 
-                updateFavoriteStatus(character)
+                favoriteButton.setImageResource(
+                    if (item.isFavorite) R.drawable.ic_favorite else R.drawable.ic_favorite_border
+                )
+                addToFavorites.text = if (item.isFavorite)
+                    root.context.getString(R.string.in_favorites)
+                else
+                    root.context.getString(R.string.add_to_favorites)
 
                 favoriteButton.setOnClickListener {
-                    toggleFavorite(character)
+                    favoriteClickListener(item)
                 }
 
                 addToFavorites.setOnClickListener {
-                    toggleFavorite(character)
+                    favoriteClickListener(item)
                 }
-            }
-        }
-
-        private fun updateFavoriteStatus(character: CharacterVo) {
-            CoroutineScope(Dispatchers.Main).launch {
-                val isFavorite = withContext(Dispatchers.IO) {
-                    viewModel.isFavorite(character.id)
-                }
-                withContext(Dispatchers.Main) {
-                    binding.favoriteButton.setImageResource(
-                        if (isFavorite) R.drawable.ic_favorite else R.drawable.ic_favorite_border
-                    )
-                    binding.addToFavorites.text = if (isFavorite)
-                        binding.root.context.getString(R.string.in_favorites)
-                    else
-                        binding.root.context.getString(R.string.add_to_favorites)
-                }
-            }
-        }
-
-        private fun toggleFavorite(character: CharacterVo) {
-            CoroutineScope(Dispatchers.Main).launch {
-                withContext(Dispatchers.IO) {
-                    if (viewModel.isFavorite(character.id)) {
-                        viewModel.removeFavoriteCharacter(character.id)
-                    } else {
-                        viewModel.addFavoriteCharacter(character)
-                    }
-                }
-                updateFavoriteStatus(character)
             }
         }
     }
 
-    class CharacterDiffCallback : DiffUtil.ItemCallback<CharacterVo>() {
-        override fun areItemsTheSame(oldItem: CharacterVo, newItem: CharacterVo): Boolean {
-            return oldItem.id == newItem.id
+    class CharacterDiffCallback : DiffUtil.ItemCallback<CharacterAdapterItem>() {
+        override fun areItemsTheSame(oldItem: CharacterAdapterItem, newItem: CharacterAdapterItem): Boolean {
+            return oldItem.character.id == newItem.character.id
         }
 
-        override fun areContentsTheSame(oldItem: CharacterVo, newItem: CharacterVo): Boolean {
+        override fun areContentsTheSame(oldItem: CharacterAdapterItem, newItem: CharacterAdapterItem): Boolean {
             return oldItem == newItem
         }
     }

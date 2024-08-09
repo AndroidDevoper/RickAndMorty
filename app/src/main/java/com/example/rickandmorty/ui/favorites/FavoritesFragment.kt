@@ -5,17 +5,21 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.navigation.findNavController
 import com.example.rickandmorty.R
 import com.example.rickandmorty.data.adapter.CharacterAdapter
+import com.example.rickandmorty.data.adapter.CharacterAdapterItem
 import com.example.rickandmorty.data.remote.NetworkUtil
 import com.example.rickandmorty.data.remote.NetworkUtil.showCenteredSnackbar
 import com.example.rickandmorty.databinding.FragmentHomeBinding
 
 class FavoritesFragment : Fragment() {
 
-    private lateinit var favoritesViewModel: FavoritesViewModel
+    private val favoritesViewModel: FavoritesViewModel by viewModels {
+        FavoritesViewModelFactory(requireContext().applicationContext)
+    }
+
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private lateinit var charactersAdapter: CharacterAdapter
@@ -31,7 +35,6 @@ class FavoritesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupViewModel()
         setupRecyclerView()
         observeViewModel()
 
@@ -40,23 +43,37 @@ class FavoritesFragment : Fragment() {
         }
     }
 
-    private fun setupViewModel() {
-        val factory = FavoritesViewModelFactory(requireContext().applicationContext)
-        favoritesViewModel = ViewModelProvider(this, factory).get(FavoritesViewModel::class.java)
-    }
-
     private fun setupRecyclerView() {
-        charactersAdapter = CharacterAdapter(favoritesViewModel) { characterId ->
-            val bundle = Bundle().apply { putInt("characterId", characterId) }
-            view?.findNavController()?.navigate(R.id.fullCharacterFragment, bundle)
-        }
+        charactersAdapter = CharacterAdapter(
+            clickListener = { characterId ->
+                val bundle = Bundle().apply { putInt("characterId", characterId) }
+                view?.findNavController()?.navigate(R.id.fullCharacterFragment, bundle)
+            },
+            favoriteClickListener = { item ->
+                if (item.isFavorite) {
+                    favoritesViewModel.removeFavoriteCharacter(item.character.id)
+                } else {
+                    favoritesViewModel.addFavoriteCharacter(item.character)
+                }
+                val updatedList = charactersAdapter.currentList.toMutableList().apply {
+                    val index = indexOfFirst { it.character.id == item.character.id }
+                    if (index != -1) {
+                        set(index, item.copy(isFavorite = !item.isFavorite))
+                    }
+                }
+                charactersAdapter.submitList(updatedList)
+            }
+        )
         binding.listCharacter.adapter = charactersAdapter
         binding.progressBar.visibility = View.GONE
     }
 
     private fun observeViewModel() {
         favoritesViewModel.favoriteCharacters.observe(viewLifecycleOwner) { favoriteCharacters ->
-            charactersAdapter.submitList(favoriteCharacters)
+            val characterItems = favoriteCharacters.map { character ->
+                CharacterAdapterItem(character, true)
+            }
+            charactersAdapter.submitList(characterItems)
         }
     }
 

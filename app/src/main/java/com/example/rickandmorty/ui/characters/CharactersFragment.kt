@@ -6,28 +6,19 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.rickandmorty.R
 import com.example.rickandmorty.data.adapter.CharacterAdapter
+import com.example.rickandmorty.data.adapter.CharacterAdapterItem
 import com.example.rickandmorty.data.remote.NetworkUtil
 import com.example.rickandmorty.data.remote.NetworkUtil.showCenteredSnackbar
 import com.example.rickandmorty.databinding.FragmentHomeBinding
-import com.example.rickandmorty.ui.favorites.FavoritesViewModel
-import com.example.rickandmorty.ui.favorites.FavoritesViewModelFactory
 
 class CharactersFragment : Fragment() {
 
-    private val viewModel: CharactersViewModel by viewModels {
-        ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().application)
-    }
-
-    private val favoritesViewModel: FavoritesViewModel by viewModels {
-        FavoritesViewModelFactory(requireContext().applicationContext)
-    }
-
+    private val viewModel: CharactersViewModel by viewModels()
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private lateinit var charactersAdapter: CharacterAdapter
@@ -55,10 +46,20 @@ class CharactersFragment : Fragment() {
     }
 
     private fun setupAdapter() {
-        charactersAdapter = CharacterAdapter(favoritesViewModel) { characterId ->
-            val bundle = Bundle().apply { putInt("characterId", characterId) }
-            view?.findNavController()?.navigate(R.id.fullCharacterFragment, bundle)
-        }
+        charactersAdapter = CharacterAdapter(
+            clickListener = { characterId ->
+                val bundle = Bundle().apply { putInt("characterId", characterId) }
+                view?.findNavController()?.navigate(R.id.fullCharacterFragment, bundle)
+            },
+            favoriteClickListener = { item ->
+                if (item.isFavorite) {
+                    viewModel.removeFavoriteCharacter(item.character.id)
+                } else {
+                    viewModel.addFavoriteCharacter(item.character)
+                }
+                updateCharacterList()
+            }
+        )
         binding.listCharacter.adapter = charactersAdapter
     }
 
@@ -66,12 +67,21 @@ class CharactersFragment : Fragment() {
         viewModel.loading.observe(viewLifecycleOwner) { isLoading ->
             binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         }
-        viewModel.characters.observe(viewLifecycleOwner) { characters ->
-            charactersAdapter.submitList(characters)
+        viewModel.characters.observe(viewLifecycleOwner) {
+            updateCharacterList()
         }
-        favoritesViewModel.favoriteCharacters.observe(viewLifecycleOwner) {
-            charactersAdapter.notifyDataSetChanged()
+        viewModel.favoriteCharacters.observe(viewLifecycleOwner) {
+            updateCharacterList()
         }
+    }
+
+    private fun updateCharacterList() {
+        val characters = viewModel.characters.value ?: emptyList()
+        val favoriteIds = viewModel.favoriteCharacters.value?.map { it.id } ?: emptyList()
+        val characterItems = characters.map { character ->
+            CharacterAdapterItem(character, favoriteIds.contains(character.id))
+        }
+        charactersAdapter.submitList(characterItems)
     }
 
     private fun setupScrollListener() {
@@ -90,6 +100,11 @@ class CharactersFragment : Fragment() {
                 }
             }
         })
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.loadFavorites()
     }
 
     override fun onDestroyView() {

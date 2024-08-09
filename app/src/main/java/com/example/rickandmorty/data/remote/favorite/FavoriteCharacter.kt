@@ -6,17 +6,17 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "favorite_characters")
 data class FavoriteCharacter(
     @PrimaryKey val id: Int,
-    val name: String,
-    val status: String,
-    val species: String,
-    val type: String,
-    val gender: String,
-    val originName: String,
-    val originUrl: String,
-    val locationName: String,
-    val locationUrl: String,
-    val image: String,
-    val episode: List<String>,
-    val url: String,
-    val created: String
+    val name: String? = null,
+    val status: String? = null,
+    val species: String? = null,
+    val type: String? = null,
+    val gender: String? = null,
+    val originName: String? = null,
+    val originUrl: String? = null,
+    val locationName: String? = null,
+    val locationUrl: String? = null,
+    val image: String? = null,
+    val episode: List<String>? = null,
+    val url: String? = null,
+    val created: String? = null
 )

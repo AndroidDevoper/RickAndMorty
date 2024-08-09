@@ -1,5 +1,6 @@
 package com.example.rickandmorty.data.viewholders
 
+import android.content.Context
 import android.content.res.Resources
 import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
@@ -15,9 +16,10 @@ import kotlinx.coroutines.withContext
 
 class CharacterDetailHolder(
     private val binding: ItemCharacterBinding,
-    private val repository: CharacterRepository
-) : BaseViewHolder<CharacterVo>(binding.root) {
+    context: Context
+    ) : BaseViewHolder<CharacterVo>(binding.root) {
 
+    private val characterRepository = CharacterRepository(context)
     private val screenWidth = Resources.getSystem().displayMetrics.widthPixels
 
     override fun bind(item: CharacterVo) {
@@ -48,7 +50,7 @@ class CharacterDetailHolder(
 
     private suspend fun updateFavoriteButton(character: CharacterVo) {
         val isFavorite = withContext(Dispatchers.IO) {
-            repository.isFavorite(character.id)
+            characterRepository.isFavorite(character.id)
         }
         binding.favoriteButton.setImageDrawable(
             ContextCompat.getDrawable(
@@ -64,10 +66,10 @@ class CharacterDetailHolder(
 
     private suspend fun toggleFavoriteStatus(character: CharacterVo) {
         withContext(Dispatchers.IO) {
-            if (repository.isFavorite(character.id)) {
-                repository.removeFavoriteCharacter(character.id)
+            if (characterRepository.isFavorite(character.id)) {
+                characterRepository.removeFavoriteCharacter(character.id)
             } else {
-                repository.addFavoriteCharacter(character)
+                characterRepository.addFavoriteCharacter(character)
             }
         }
         updateFavoriteButton(character)

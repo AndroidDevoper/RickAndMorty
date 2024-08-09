@@ -7,7 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class FavoritesViewModel(private val repository: CharacterRepository) : ViewModel() {
+class FavoritesViewModel(private val characterRepository: CharacterRepository) : ViewModel() {
 
     private val _favoriteCharacters = MutableLiveData<List<CharacterVo>>()
     val favoriteCharacters: LiveData<List<CharacterVo>> get() = _favoriteCharacters
@@ -19,7 +19,7 @@ class FavoritesViewModel(private val repository: CharacterRepository) : ViewMode
     fun loadFavorites() {
         viewModelScope.launch {
             val favorites = withContext(Dispatchers.IO) {
-                repository.getFavoriteCharacters()
+                characterRepository.getFavoriteCharacters()
             }
             _favoriteCharacters.postValue(favorites)
         }
@@ -28,24 +28,18 @@ class FavoritesViewModel(private val repository: CharacterRepository) : ViewMode
     fun addFavoriteCharacter(character: CharacterVo) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                repository.addFavoriteCharacter(character)
+                characterRepository.addFavoriteCharacter(character)
             }
-            loadFavorites()
+            _favoriteCharacters.value = _favoriteCharacters.value.orEmpty() + character
         }
     }
 
     fun removeFavoriteCharacter(characterId: Int) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                repository.removeFavoriteCharacter(characterId)
+                characterRepository.removeFavoriteCharacter(characterId)
             }
-            loadFavorites()
-        }
-    }
-
-    suspend fun isFavorite(characterId: Int): Boolean {
-        return withContext(Dispatchers.IO) {
-            repository.isFavorite(characterId)
+            _favoriteCharacters.value = _favoriteCharacters.value?.filter { it.id != characterId }
         }
     }
 }
