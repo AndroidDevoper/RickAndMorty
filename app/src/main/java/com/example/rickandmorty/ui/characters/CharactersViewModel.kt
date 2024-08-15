@@ -3,9 +3,11 @@ package com.example.rickandmorty.ui.characters
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
+import com.example.rickandmorty.data.adapter.CharacterAdapterItem
 import com.example.rickandmorty.data.remote.CharacterRepository
 import com.example.rickandmorty.data.remote.vo.CharacterVo
 import kotlinx.coroutines.Dispatchers
@@ -15,8 +17,9 @@ import java.io.IOException
 
 class CharactersViewModel(application: Application) : AndroidViewModel(application) {
     private val characterRepository: CharacterRepository = CharacterRepository(application)
+
     private val _characters = MutableLiveData<List<CharacterVo>>()
-    val characters: LiveData<List<CharacterVo>> get() = _characters
+    private val _favoriteCharacters = MutableLiveData<List<CharacterVo>>()
 
     private val _loading = MutableLiveData<Boolean>()
     val loading: LiveData<Boolean> get() = _loading
@@ -24,11 +27,27 @@ class CharactersViewModel(application: Application) : AndroidViewModel(applicati
     private val _error = MutableLiveData<String?>()
     val error: LiveData<String?> get() = _error
 
+    private val _characterItems = MediatorLiveData<List<CharacterAdapterItem>>()
+    val characterItems: LiveData<List<CharacterAdapterItem>> get() = _characterItems
+
     private var currentPage = 1
     private var isLastPage = false
 
     init {
         loadCharacters()
+        loadFavorites()
+
+        _characterItems.addSource(_characters) { updateCharacterItems() }
+        _characterItems.addSource(_favoriteCharacters) { updateCharacterItems() }
+    }
+
+    private fun updateCharacterItems() {
+        val characters = _characters.value.orEmpty()
+        val favoriteIds = _favoriteCharacters.value.orEmpty().map { it.id }
+
+        _characterItems.value = characters.map { character ->
+            CharacterAdapterItem(character, favoriteIds.contains(character.id))
+        }
     }
 
     fun loadCharacters() {
@@ -75,13 +94,6 @@ class CharactersViewModel(application: Application) : AndroidViewModel(applicati
             emit(null)
             _error.postValue("Произошла ошибка: ${e.message}")
         }
-    }
-
-    private val _favoriteCharacters = MutableLiveData<List<CharacterVo>>()
-    val favoriteCharacters: LiveData<List<CharacterVo>> get() = _favoriteCharacters
-
-    init {
-        loadFavorites()
     }
 
     fun loadFavorites() {

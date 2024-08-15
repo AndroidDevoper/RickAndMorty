@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.rickandmorty.R
 import com.example.rickandmorty.data.adapter.CharacterAdapter
-import com.example.rickandmorty.data.adapter.CharacterAdapterItem
 import com.example.rickandmorty.data.remote.NetworkUtil
 import com.example.rickandmorty.data.remote.NetworkUtil.showCenteredSnackbar
 import com.example.rickandmorty.databinding.FragmentHomeBinding
@@ -57,7 +56,6 @@ class CharactersFragment : Fragment() {
                 } else {
                     viewModel.addFavoriteCharacter(item.character)
                 }
-                updateCharacterList()
             }
         )
         binding.listCharacter.adapter = charactersAdapter
@@ -67,21 +65,9 @@ class CharactersFragment : Fragment() {
         viewModel.loading.observe(viewLifecycleOwner) { isLoading ->
             binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         }
-        viewModel.characters.observe(viewLifecycleOwner) {
-            updateCharacterList()
+        viewModel.characterItems.observe(viewLifecycleOwner) { characterItems ->
+            charactersAdapter.submitList(characterItems)
         }
-        viewModel.favoriteCharacters.observe(viewLifecycleOwner) {
-            updateCharacterList()
-        }
-    }
-
-    private fun updateCharacterList() {
-        val characters = viewModel.characters.value ?: emptyList()
-        val favoriteIds = viewModel.favoriteCharacters.value?.map { it.id } ?: emptyList()
-        val characterItems = characters.map { character ->
-            CharacterAdapterItem(character, favoriteIds.contains(character.id))
-        }
-        charactersAdapter.submitList(characterItems)
     }
 
     private fun setupScrollListener() {

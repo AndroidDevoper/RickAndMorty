@@ -38,9 +38,6 @@ class FavoritesFragment : Fragment() {
         setupRecyclerView()
         observeViewModel()
 
-        if (!NetworkUtil.isInternetAvailable(requireContext())) {
-            showCenteredSnackbar(view)
-        }
     }
 
     private fun setupRecyclerView() {
@@ -55,11 +52,8 @@ class FavoritesFragment : Fragment() {
                 } else {
                     favoritesViewModel.addFavoriteCharacter(item.character)
                 }
-                val updatedList = charactersAdapter.currentList.toMutableList().apply {
-                    val index = indexOfFirst { it.character.id == item.character.id }
-                    if (index != -1) {
-                        set(index, item.copy(isFavorite = !item.isFavorite))
-                    }
+                val updatedList = charactersAdapter.currentList.map {
+                    if (it == item) it.copy(isFavorite = !it.isFavorite) else it
                 }
                 charactersAdapter.submitList(updatedList)
             }
@@ -80,6 +74,10 @@ class FavoritesFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         favoritesViewModel.loadFavorites()
+
+        if (!NetworkUtil.isInternetAvailable(requireContext())) {
+            view?.let { showCenteredSnackbar(it) }
+        }
     }
 
     override fun onDestroyView() {

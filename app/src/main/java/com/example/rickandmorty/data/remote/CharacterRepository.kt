@@ -10,8 +10,6 @@ class CharacterRepository(context: Context) {
 
     private val apiService = RetrofitClient.characterApi
     private val favoriteDao = AppDatabase.getDatabase(context).favoriteDao()
-    private fun String?.orEmpty() = this ?: ""
-    private fun List<String>?.orEmptyList() = this ?: emptyList()
 
     private suspend fun getAllCharacters(page: Int): GetPageCharactersResult {
         return apiService.getAllCharacters(page)
@@ -89,7 +87,7 @@ class CharacterRepository(context: Context) {
             origin = OriginVo(originName.orEmpty(), originUrl.orEmpty()),
             location = LocationVo(locationName.orEmpty(), locationUrl.orEmpty()),
             image = image.orEmpty(),
-            episode = episode.orEmptyList(),
+            episode = episode.orEmpty(),
             url = url.orEmpty(),
             created = created.orEmpty()
         )

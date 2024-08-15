@@ -8,9 +8,11 @@ import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import com.example.rickandmorty.data.adapter.CharacterDetailAdapter
 import com.example.rickandmorty.data.adapter.CharacterDetailRecyclerItem
+import com.example.rickandmorty.data.remote.CharacterRepository
 import com.example.rickandmorty.data.remote.NetworkUtil
 import com.example.rickandmorty.data.remote.NetworkUtil.showCenteredSnackbar
 import com.example.rickandmorty.databinding.FragmentHomeBinding
+import com.example.rickandmorty.ui.favorites.FavoriteManager
 
 class CharacterDetailsFragment : Fragment() {
 
@@ -18,6 +20,7 @@ class CharacterDetailsFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private lateinit var adapter: CharacterDetailAdapter
+    private lateinit var favoriteManager: FavoriteManager
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -31,7 +34,9 @@ class CharacterDetailsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        adapter = CharacterDetailAdapter()
+        val characterRepository = CharacterRepository(requireContext())
+        favoriteManager = FavoriteManager(requireContext(), characterRepository)
+        adapter = CharacterDetailAdapter(favoriteManager)
         binding.listCharacter.adapter = adapter
         binding.progressBar.visibility = View.VISIBLE
 

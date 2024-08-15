@@ -10,9 +10,11 @@ import com.example.rickandmorty.data.viewholders.CharacterDetailHolder
 import com.example.rickandmorty.data.viewholders.LocationViewHolder
 import com.example.rickandmorty.databinding.ItemCharacterBinding
 import com.example.rickandmorty.databinding.ItemLocationBinding
+import com.example.rickandmorty.ui.favorites.FavoriteManager
 
-class CharacterDetailAdapter :
-    ListAdapter<CharacterDetailRecyclerItem, BaseViewHolder<*>>(CharacterDetailDiffCallback()) {
+class CharacterDetailAdapter(
+    private val favoriteManager: FavoriteManager
+) : ListAdapter<CharacterDetailRecyclerItem, BaseViewHolder<*>>(CharacterDetailDiffCallback()) {
 
     companion object {
         private const val VIEW_TYPE_CHARACTER = 0
@@ -24,7 +26,7 @@ class CharacterDetailAdapter :
         return when (viewType) {
             VIEW_TYPE_CHARACTER -> {
                 val binding = ItemCharacterBinding.inflate(layoutInflater, parent, false)
-                CharacterDetailHolder(binding, parent.context)
+                CharacterDetailHolder(binding, favoriteManager)
             }
             VIEW_TYPE_LOCATION -> {
                 val binding = ItemLocationBinding.inflate(layoutInflater, parent, false)
@@ -38,6 +40,7 @@ class CharacterDetailAdapter :
         return when (getItem(position)) {
             is CharacterDetailInfoRecyclerItem -> VIEW_TYPE_CHARACTER
             is CharacterDetailLocationRecyclerItem -> VIEW_TYPE_LOCATION
+            else -> throw IllegalArgumentException("Invalid item type")
         }
     }
 
@@ -49,8 +52,14 @@ class CharacterDetailAdapter :
     }
 
     class CharacterDetailDiffCallback : DiffUtil.ItemCallback<CharacterDetailRecyclerItem>() {
+
         override fun areItemsTheSame(oldItem: CharacterDetailRecyclerItem, newItem: CharacterDetailRecyclerItem): Boolean {
-            return oldItem == newItem
+            return when {
+                oldItem is CharacterDetailInfoRecyclerItem && newItem is CharacterDetailInfoRecyclerItem -> {
+                    oldItem.character.id == newItem.character.id
+                }
+                else -> false
+            }
         }
 
         override fun areContentsTheSame(oldItem: CharacterDetailRecyclerItem, newItem: CharacterDetailRecyclerItem): Boolean {
