@@ -2,39 +2,34 @@ package com.example.rickandmorty.data.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import com.example.rickandmorty.data.adapter.CharacterDetailRecyclerItem.*
-import com.example.rickandmorty.data.remote.vo.CharacterVo
 import com.example.rickandmorty.data.viewholders.BaseViewHolder
 import com.example.rickandmorty.data.viewholders.CharacterDetailHolder
 import com.example.rickandmorty.data.viewholders.LocationViewHolder
 import com.example.rickandmorty.databinding.ItemCharacterBinding
 import com.example.rickandmorty.databinding.ItemLocationBinding
+import com.example.rickandmorty.ui.favorites.FavoriteManager
 
-class CharacterDetailAdapter : RecyclerView.Adapter<BaseViewHolder<*>>() {
-
-    private val items = mutableListOf<CharacterDetailRecyclerItem>()
+class CharacterDetailAdapter(
+    private val favoriteManager: FavoriteManager
+) : ListAdapter<CharacterDetailRecyclerItem, BaseViewHolder<*>>(CharacterDetailDiffCallback()) {
 
     companion object {
         private const val VIEW_TYPE_CHARACTER = 0
         private const val VIEW_TYPE_LOCATION = 1
     }
 
-    fun setData(character: CharacterVo) {
-        items.clear()
-        items.add(CharacterDetailInfoRecyclerItem(character))
-        items.add(CharacterDetailLocationRecyclerItem(character.location))
-        notifyDataSetChanged()
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<*> {
+        val layoutInflater = LayoutInflater.from(parent.context)
         return when (viewType) {
             VIEW_TYPE_CHARACTER -> {
-                val binding = ItemCharacterBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-                CharacterDetailHolder(binding)
+                val binding = ItemCharacterBinding.inflate(layoutInflater, parent, false)
+                CharacterDetailHolder(binding, favoriteManager)
             }
             VIEW_TYPE_LOCATION -> {
-                val binding = ItemLocationBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+                val binding = ItemLocationBinding.inflate(layoutInflater, parent, false)
                 LocationViewHolder(binding)
             }
             else -> throw IllegalArgumentException("Invalid view type")
@@ -42,20 +37,33 @@ class CharacterDetailAdapter : RecyclerView.Adapter<BaseViewHolder<*>>() {
     }
 
     override fun getItemViewType(position: Int): Int {
-        return when (items[position]) {
+        return when (getItem(position)) {
             is CharacterDetailInfoRecyclerItem -> VIEW_TYPE_CHARACTER
             is CharacterDetailLocationRecyclerItem -> VIEW_TYPE_LOCATION
+            else -> throw IllegalArgumentException("Invalid item type")
         }
     }
 
-    override fun getItemCount(): Int {
-        return items.size
-    }
-
     override fun onBindViewHolder(holder: BaseViewHolder<*>, position: Int) {
-        when (val item = items[position]) {
+        when (val item = getItem(position)) {
             is CharacterDetailInfoRecyclerItem -> (holder as CharacterDetailHolder).bind(item.character)
             is CharacterDetailLocationRecyclerItem -> (holder as LocationViewHolder).bind(item.location)
+        }
+    }
+
+    class CharacterDetailDiffCallback : DiffUtil.ItemCallback<CharacterDetailRecyclerItem>() {
+
+        override fun areItemsTheSame(oldItem: CharacterDetailRecyclerItem, newItem: CharacterDetailRecyclerItem): Boolean {
+            return when {
+                oldItem is CharacterDetailInfoRecyclerItem && newItem is CharacterDetailInfoRecyclerItem -> {
+                    oldItem.character.id == newItem.character.id
+                }
+                else -> false
+            }
+        }
+
+        override fun areContentsTheSame(oldItem: CharacterDetailRecyclerItem, newItem: CharacterDetailRecyclerItem): Boolean {
+            return oldItem == newItem
         }
     }
 }

@@ -4,4 +4,6 @@
     <string name="title_favorites">Избранное</string>
     <string name="description">Рисунок персонажа</string>
     <string name="full_description">Подробное описание</string>
+    <string name="add_to_favorites">Добавить в избранное</string>
+    <string name="in_favorites">В избранном</string>
 </resources>
